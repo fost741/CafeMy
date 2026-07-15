@@ -45,6 +45,15 @@ while (running)
                 Console.WriteLine("Press any key to continue...");
                 Console.ReadKey();
                 break;
+            case 5:
+                if (IsBillEmpty(currCount, "Bill is already empty. There is nothing to clear..")) break;
+                else
+                {
+                    ClearBill(itemNames, itemPrices, ref currCount, ref tipAmount);
+                    Console.WriteLine("\nBill was successfully cleared!\n");
+                }
+
+                break;
             case 0:
                 Console.WriteLine("Thanks! Have a nice day!");
                 running = false;
@@ -254,6 +263,18 @@ string DisplayBill(string[] names, double[] prices, int count, double tipTot, do
             new string('=', width) + "\n";
     return bill;
 }
+
+void ClearBill(string[] names, double[] prices, ref int count, ref double tip)
+{
+    for (int i = 0; i < count; i++)
+    {
+        names[i] = null;
+        prices[i] = 0;
+    }
+    count = 0;
+    tip = 0;
+}
+
 
 static string GetMenu()
 {
