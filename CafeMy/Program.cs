@@ -52,6 +52,24 @@ while (running)
                     ClearBill(itemNames, itemPrices, ref currCount, ref tipAmount);
                     Console.WriteLine("\nBill was successfully cleared!\n");
                 }
+                break;
+            case 6:
+                if (IsBillEmpty(currCount, "Bill is empty. Nothing to save.")) break;
+                string saveName = "";
+                while (true)
+                {
+                    saveName = Message("Enter file path to save items to(without .csv): ");
+                    if (string.IsNullOrWhiteSpace(saveName)) saveName = "receipt";
+                    if (IsFileNameValid(saveName)) break;
+                    Console.WriteLine("Wrong input. File name must be 1-10 characters long, containing only letters and digits.\n");
+                }
+                string savePath = saveName + ".csv";
+                string content = "";
+                for (int i = 0; i < currCount; i++)
+                {
+                    content += $"{itemNames[i]},{itemPrices[i].ToString("F2", CultureInfo.InvariantCulture)}\n";
+                }
+                Console.WriteLine(SaveToFile(savePath, content) ? "\nSaved!" : "\n[!]Error saving file.");
 
                 break;
             case 0:
@@ -275,6 +293,21 @@ void ClearBill(string[] names, double[] prices, ref int count, ref double tip)
     tip = 0;
 }
 
+bool IsFileNameValid(string name) =>
+    !string.IsNullOrWhiteSpace(name) && name.Length >= 1 && name.Length <= 10 && name.All(char.IsLetterOrDigit);
+
+bool SaveToFile(string filePath, string fileCont)
+{
+    try
+    {
+        using (StreamWriter sw = new StreamWriter(filePath))
+        {
+            sw.Write(fileCont);
+        }
+        return true;
+    }
+    catch { return false; }
+}
 
 static string GetMenu()
 {
