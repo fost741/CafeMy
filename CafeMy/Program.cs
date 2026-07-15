@@ -25,6 +25,12 @@ while (running)
             case 1:
                 AddItem();
                 break;
+            case 4:
+                string billText = DisplayBill(itemNames, itemPrices, itemQtys, currCount, tipAmount, gstPercent);
+                Console.WriteLine(billText);
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey();
+                break;
             case 0:
                 Console.WriteLine("Thanks! Have a nice day!");
                 running = false;
@@ -124,6 +130,35 @@ void AddItem()
 
     AddItemToList(item, price, qty);
     Console.WriteLine("Add item was successful.\n");
+}
+
+string DisplayBill(string[] names, double[] prices, int[] qty, int count, double tipTot, double gst)
+{
+    if (count == 0) return "\n Bill is empty. No items to display.";
+
+    int width = 38;
+    string bill = $"\n{"Description",-22} {"Price",15}\n" +
+                  new string('-', width) + "\n";
+
+    double subtotal = 0;
+    for (int i = 0; i < count; i++)
+    {
+        double amount = qty[i] * prices[i];
+        subtotal += amount;
+        string priceFormatted = "$" + prices[i].ToString("F2");
+        bill += $"{names[i],-22} {priceFormatted,15}\n";
+    }
+    bill += new string('-', width) + "\n";
+
+    double gstCurr = Math.Round(subtotal * (gst / 100), 2);
+    double total = CalculateTotal(subtotal, tipTot, gst);
+
+    bill += $"{"Net Total",22} {"$" + subtotal.ToString("F2"),15}\n" +
+            $"{"Tip Amount",22} {"$" + tipTot.ToString("F2"),15}\n" +
+            $"{"GST Amount",22} {"$" + gstCurr.ToString("F2"),15}\n" +
+            $"{"Total Amount",22} {"$" + total.ToString("F2"),15}\n\n"+
+            new string('=', width) + "\n";
+    return bill;
 }
 
 static string GetMenu()
