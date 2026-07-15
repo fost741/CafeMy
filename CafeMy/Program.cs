@@ -8,7 +8,6 @@ CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
 bool running = true;
 string[] itemNames = new string[5];
 double[] itemPrices = new double[5];
-int[] itemQtys = new int[5];
 int currCount = 0;
 double gstPercent = 5;
 double tipAmount = 0;
@@ -25,8 +24,11 @@ while (running)
             case 1:
                 AddItem();
                 break;
+            case 2:
+                RemoveItem();
+                break;
             case 4:
-                string billText = DisplayBill(itemNames, itemPrices, itemQtys, currCount, tipAmount, gstPercent);
+                string billText = DisplayBill(itemNames, itemPrices, currCount, tipAmount, gstPercent);
                 Console.WriteLine(billText);
                 Console.WriteLine("Press any key to continue...");
                 Console.ReadKey();
@@ -58,7 +60,6 @@ bool NameValid(string name) =>
     !string.IsNullOrWhiteSpace(name) && name.Length >= 3 && name.Length <= 20 && name.All(c => char.IsLetterOrDigit(c) || c == ' ');
 
 bool IsPriceValid(double price) => price > 0;
-bool IsQtyValid(int qty) => qty >= 1 && qty <= 5;
 
 int Diap(string mess, int min, int max)
 {
@@ -73,12 +74,12 @@ int Diap(string mess, int min, int max)
     }
 }
 
-double CalculateSub(double[] prices, int[] qtys, int count)
+double CalculateSub(double[] prices, int count)
 {
     double sub = 0;
     for (int i = 0; i < count; i++)
     {
-        sub += qtys[i] * prices[i];
+        sub += prices[i];
     }
     return sub;
 }
@@ -88,12 +89,11 @@ double CalculateTotal(double subtotal, double tips, double gst)
     double gstCurr = subtotal * (gst / 100);
     return subtotal + tips + gstCurr;
 }
-bool AddItemToList(string name, double price, int qty)
+bool AddItemToList(string name, double price)
 {
     if (currCount >= 5) return false;
     itemNames[currCount] = name;
     itemPrices[currCount] = price;
-    itemQtys[currCount] = qty;
     currCount++;
     return true;
 }
@@ -116,23 +116,68 @@ void AddItem()
     while (true)
     {
         string priceInp = Message("Enter price: ");
-        if (double.TryParse(priceInp, NumberStyles.Any, CultureInfo.InvariantCulture, out price) && IsPriceValid(price)) break;
+        if (double.TryParse(priceInp, CultureInfo.InvariantCulture, out price) && IsPriceValid(price)) break;
         Console.WriteLine("Wrong input. Price should be positive number.");
     }
 
-    int qty = 0;
-    while (true)
-    {
-        string qtyInp = Message("Enter quantity: ");
-        if (int.TryParse(qtyInp, out qty) && IsQtyValid(qty)) break;
-        Console.WriteLine("Wrong input. Qty should be integer between 1 and 5");
-    }
-
-    AddItemToList(item, price, qty);
-    Console.WriteLine("Add item was successful.\n");
+    AddItemToList(item, price);
+    Console.WriteLine("Item was successfully added to list.\n");
 }
 
-string DisplayBill(string[] names, double[] prices, int[] qty, int count, double tipTot, double gst)
+bool TryRemoveItem(int index, ref int count, string[] names, double[] prices)
+{
+    if (index < 0 || index >= count) return false;
+    for (int i = index; i < count - 1; i++)
+    {
+        names[i] = names[i + 1];
+        prices[i] = prices[i + 1];
+    }
+    names[count - 1] = null;
+    prices[count - 1] = 0;
+
+    count--;
+    return true;
+}
+
+string RemoveList(string[] names, double[] prices, int count)
+{
+    string listText = $"{"ItemNo",-6} {"Description",-20} {"Price",10}\n" +
+                      "------ -------------------- ----------\n";
+
+    for (int i = 0; i < count; i++)
+    {
+        string priceFormated = "$" + prices[i].ToString("F2");
+        listText += $"{i + 1,6} {names[i],-20}{priceFormated,10}\n";
+    }
+    return listText;
+}
+
+
+void RemoveItem()
+{
+    if (IsBillEmpty(currCount, "[!] Bill is empty. There is nothing to remove.")) return;
+
+    Console.WriteLine(RemoveList(itemNames, itemPrices, currCount));
+    while (true)
+    {
+        string itemNoInp = Message("Enter the item number to remove or 0 to cancel: ");
+        if (int.TryParse(itemNoInp, out int itemNo))
+        {
+            if (itemNo == 0)
+            { Console.WriteLine("Reamoval cancled.\n"); break; }
+            int index = itemNo - 1;
+            if (TryRemoveItem(index, ref currCount, itemNames, itemPrices))
+            { tipAmount = 0; Console.WriteLine("Item was successfully removed. Tips have been reset. \n"); break; }
+        }
+
+        Console.WriteLine($"Wrong input. Please enter a number between 1 and {currCount} (or 0).");
+    }
+    Console.WriteLine("Press any key to continue...");
+    Console.ReadKey();
+}
+
+
+string DisplayBill(string[] names, double[] prices, int count, double tipTot, double gst)
 {
     if (count == 0) return "\n Bill is empty. No items to display.";
 
@@ -143,8 +188,7 @@ string DisplayBill(string[] names, double[] prices, int[] qty, int count, double
     double subtotal = 0;
     for (int i = 0; i < count; i++)
     {
-        double amount = qty[i] * prices[i];
-        subtotal += amount;
+        subtotal += prices[i];
         string priceFormatted = "$" + prices[i].ToString("F2");
         bill += $"{names[i],-22} {priceFormatted,15}\n";
     }
