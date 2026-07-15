@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics.Metrics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Globalization;
+using System.Xml.Linq;
 
 CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
 
@@ -71,6 +73,18 @@ while (running)
                 }
                 Console.WriteLine(SaveToFile(savePath, content) ? "\nSaved!" : "\n[!]Error saving file.");
 
+                break;
+            case 7:
+                string loadName = "";
+                while (true)
+                {
+                    loadName = Message("Enter file name to load(1 - 10 letters / digits, without.csv): ");
+                    if (string.IsNullOrWhiteSpace(loadName)) loadName = "receipt";
+                    if (IsFileNameValid(loadName)) break;
+                    Console.WriteLine("Wrong input. File name must be 1-10 characters long, containing only letters and digits.\n");
+                }
+                string loadPath = loadName + ".csv";
+                LoadFromFile(loadPath);
                 break;
             case 0:
                 Console.WriteLine("Thanks! Have a nice day!");
@@ -307,6 +321,37 @@ bool SaveToFile(string filePath, string fileCont)
         return true;
     }
     catch { return false; }
+}
+
+void LoadFromFile(string filePath)
+{
+    if (File.Exists(filePath))
+    {
+        try
+        {
+            ClearBill(itemNames, itemPrices, ref currCount, ref tipAmount);
+            string[] lines = File.ReadAllLines(filePath);
+            foreach(string line in lines)
+            {
+                if (string.IsNullOrWhiteSpace(line)) continue;
+                string[] parts = line.Split(',');
+                if (parts.Length == 2)
+                {
+                    string name = parts[0].Trim();
+                    if (double.TryParse(parts[1], CultureInfo.InvariantCulture, out double price)) AddItemToList(name, price);
+                }
+            }
+            Console.WriteLine($"\nRead from {filePath} was successful!\n");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"\n[!] Error reading file: {ex.Message}\n");
+        }
+    }
+    else
+    {
+        Console.WriteLine($"\n[!] File '{filePath}' not found.\n");
+    }
 }
 
 static string GetMenu()
