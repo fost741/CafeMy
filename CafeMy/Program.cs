@@ -27,6 +27,18 @@ while (running)
             case 2:
                 RemoveItem();
                 break;
+            case 3:
+                if (IsBillEmpty(currCount, "[!] The bill is empty! Add items to the bill before setting tips.")) break;
+
+                double currSub = CalculateSub(itemPrices, currCount);
+                string tipMenu = $"Net Total: ${currSub:F2}\n" +
+                         "1 - Tip Percentage\n" +
+                         "2 - Tip Amount\n" +
+                         "0 - No Tip\n" +
+                         "Enter Tip Method: ";
+                tipAmount = AddTip(tipMenu, currSub);
+                string tipStatus = (tipAmount > 0) ? $"\nTip successfully updated to ${tipAmount:F2}\n" : "\nTip amount is $0.00\n";
+                break;
             case 4:
                 string billText = DisplayBill(itemNames, itemPrices, currCount, tipAmount, gstPercent);
                 Console.WriteLine(billText);
@@ -68,7 +80,7 @@ int Diap(string mess, int min, int max)
         string input = Message(mess);
         if (int.TryParse(input, out int choice))
         {
-            if (choice >= min && choice <= max) return choice;
+            if (choice >= min && choice <= max || choice == 0) return choice;
         }
         Console.WriteLine($"Wrong choice! Please enter a number between {min} and {max}.\n");
     }
@@ -176,6 +188,44 @@ void RemoveItem()
     Console.ReadKey();
 }
 
+
+double AddTip(string menu, double subtotal)
+{
+    double tipChoice = Diap(menu, 1, 2);
+    if (tipChoice == 0)
+    {
+        Console.WriteLine("Tip configuration canceled.\n");
+        return 0;
+    }
+    else if (tipChoice == 1) return TipPercent(subtotal);
+    else if (tipChoice == 2) return TipAmount();
+    return 0;
+
+}
+double TipPercent(double subtotal)
+{
+    while (true)
+    {
+        string input = Message("Enter tip percentage (0-100%): ");
+        if ((double.TryParse(input, out double percent)) && percent >= 0 && percent <= 100)
+        {
+            double totTip = subtotal * (percent / 100);
+            return totTip;
+        }
+        Console.WriteLine("Wrong input. Percentage must be between 0 and 100.\n");
+    }
+
+}
+
+double TipAmount()
+{
+    while (true)
+    {
+        string input = Message("Enter tip amount($): ");
+        if ((double.TryParse(input, out double amount)) && amount > 0) return amount;
+        Console.WriteLine("Wrong input. Amount must be more than 0.\n");
+    }
+}
 
 string DisplayBill(string[] names, double[] prices, int count, double tipTot, double gst)
 {
