@@ -40,6 +40,7 @@ while (running)
                          "Enter Tip Method: ";
                 tipAmount = AddTip(tipMenu, currSub);
                 string tipStatus = (tipAmount > 0) ? $"\nTip successfully updated to ${tipAmount:F2}\n" : "\nTip amount is $0.00\n";
+                Console.WriteLine(tipStatus);
                 break;
             case 4:
                 string billText = DisplayBill(itemNames, itemPrices, currCount, tipAmount, gstPercent);
@@ -60,30 +61,30 @@ while (running)
                 string saveName = "";
                 while (true)
                 {
-                    saveName = Message("Enter file path to save items to(without .csv): ");
-                    if (string.IsNullOrWhiteSpace(saveName)) saveName = "receipt";
+                    saveName = Message("Enter file name to save (1-10 letters/digits, without .txt): ");
+                    if (string.IsNullOrWhiteSpace(saveName)) saveName = "bill";
                     if (IsFileNameValid(saveName)) break;
                     Console.WriteLine("Wrong input. File name must be 1-10 characters long, containing only letters and digits.\n");
                 }
-                string savePath = saveName + ".csv";
-                string content = "";
-                for (int i = 0; i < currCount; i++)
-                {
-                    content += $"{itemNames[i]},{itemPrices[i].ToString("F2", CultureInfo.InvariantCulture)}\n";
-                }
+                string savePath = saveName + ".txt";
+                string content = DisplayBill(itemNames, itemPrices, currCount, tipAmount, gstPercent);
+                
                 Console.WriteLine(SaveToFile(savePath, content) ? "\nSaved!" : "\n[!]Error saving file.");
-
+                if (SaveToFile(savePath, content))
+                    Console.WriteLine($"\nSuccessfully saved to {savePath}!\n");
+                else
+                    Console.WriteLine("\n[!] Error saving file.\n");
                 break;
             case 7:
                 string loadName = "";
                 while (true)
                 {
-                    loadName = Message("Enter file name to load(1 - 10 letters / digits, without.csv): ");
-                    if (string.IsNullOrWhiteSpace(loadName)) loadName = "receipt";
+                    loadName = Message("Enter file name to load(1 - 10 letters / digits, without.txt): ");
+                    if (string.IsNullOrWhiteSpace(loadName)) loadName = "bill";
                     if (IsFileNameValid(loadName)) break;
                     Console.WriteLine("Wrong input. File name must be 1-10 characters long, containing only letters and digits.\n");
                 }
-                string loadPath = loadName + ".csv";
+                string loadPath = loadName + ".txt";
                 LoadFromFile(loadPath);
                 break;
             case 0:
@@ -333,12 +334,21 @@ void LoadFromFile(string filePath)
             string[] lines = File.ReadAllLines(filePath);
             foreach(string line in lines)
             {
-                if (string.IsNullOrWhiteSpace(line)) continue;
-                string[] parts = line.Split(',');
-                if (parts.Length == 2)
+                if (string.IsNullOrWhiteSpace(line) ||
+                line.Contains("-") || line.Contains("=") ||
+                line.Contains("Description") || line.Contains("Total") ||
+                line.Contains("Net") || line.Contains("GST") || line.Contains("Tip")) continue;
+                string[] parts = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length >= 2)
                 {
-                    string name = parts[0].Trim();
-                    if (double.TryParse(parts[1], CultureInfo.InvariantCulture, out double price)) AddItemToList(name, price);
+                    string name = parts[0];
+                    string priceString = parts[parts.Length - 1].Replace("$", "").Replace(",", ".");
+
+                    if (double.TryParse(priceString, NumberStyles.Any, CultureInfo.InvariantCulture, out double price))
+                    {
+                        AddItemToList(name, price);
+                        //Console.WriteLine($"Loaded {name} with price {price}");
+                    }
                 }
             }
             Console.WriteLine($"\nRead from {filePath} was successful!\n");
