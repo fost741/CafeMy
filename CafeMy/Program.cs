@@ -7,97 +7,99 @@ using System.Xml.Linq;
 
 CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
 
-bool running = true;
-string[] itemNames = new string[5];
-double[] itemPrices = new double[5];
-int currCount = 0;
-double gstPercent = 5;
-double tipAmount = 0;
-
-while (running)
+    bool running = true;
+    string[] itemNames = new string[5];
+    double[] itemPrices = new double[5];
+    int currCount = 0;
+    double gstPercent = 5;
+    double tipAmount = 0;
+void Main()
 {
-    Console.Write(GetMenu());
-    string input = Console.ReadLine();
-    if (int.TryParse(input, out int choice))
+    while (running)
     {
-        Console.WriteLine();
-        switch (choice)
+        Console.Write(GetMenu());
+        string input = Console.ReadLine();
+        if (int.TryParse(input, out int choice))
         {
-            case 1:
-                AddItem();
-                break;
-            case 2:
-                RemoveItem();
-                break;
-            case 3:
-                if (IsBillEmpty(currCount, "[!] The bill is empty! Add items to the bill before setting tips.")) break;
+            Console.WriteLine();
+            switch (choice)
+            {
+                case 1:
+                    AddItem();
+                    break;
+                case 2:
+                    RemoveItem();
+                    break;
+                case 3:
+                    if (IsBillEmpty(currCount, "[!] The bill is empty! Add items to the bill before setting tips.")) break;
 
-                double currSub = CalculateSub(itemPrices, currCount);
-                string tipMenu = $"Net Total: ${currSub:F2}\n" +
-                         "1 - Tip Percentage\n" +
-                         "2 - Tip Amount\n" +
-                         "0 - No Tip\n" +
-                         "Enter Tip Method: ";
-                tipAmount = AddTip(tipMenu, currSub);
-                string tipStatus = (tipAmount > 0) ? $"\nTip successfully updated to ${tipAmount:F2}\n" : "\nTip amount is $0.00\n";
-                Console.WriteLine(tipStatus);
-                break;
-            case 4:
-                string billText = DisplayBill(itemNames, itemPrices, currCount, tipAmount, gstPercent);
-                Console.WriteLine(billText);
-                Console.WriteLine("Press any key to continue...");
-                Console.ReadKey();
-                break;
-            case 5:
-                if (IsBillEmpty(currCount, "Bill is already empty. There is nothing to clear..")) break;
-                else
-                {
-                    ClearBill(itemNames, itemPrices, ref currCount, ref tipAmount);
-                    Console.WriteLine("\nBill was successfully cleared!\n");
-                }
-                break;
-            case 6:
-                if (IsBillEmpty(currCount, "Bill is empty. Nothing to save.")) break;
-                string saveName = "";
-                while (true)
-                {
-                    saveName = Message("Enter file name to save (1-10 letters/digits, without .txt): ");
-                    if (string.IsNullOrWhiteSpace(saveName)) saveName = "bill";
-                    if (IsFileNameValid(saveName)) break;
-                    Console.WriteLine("Wrong input. File name must be 1-10 characters long, containing only letters and digits.\n");
-                }
-                string savePath = saveName + ".txt";
-                string content = DisplayBill(itemNames, itemPrices, currCount, tipAmount, gstPercent);
-                
-                Console.WriteLine(SaveToFile(savePath, content) ? "\nSaved!" : "\n[!]Error saving file.");
-                if (SaveToFile(savePath, content))
-                    Console.WriteLine($"\nSuccessfully saved to {savePath}!\n");
-                else
-                    Console.WriteLine("\n[!] Error saving file.\n");
-                break;
-            case 7:
-                string loadName = "";
-                while (true)
-                {
-                    loadName = Message("Enter file name to load(1 - 10 letters / digits, without.txt): ");
-                    if (string.IsNullOrWhiteSpace(loadName)) loadName = "bill";
-                    if (IsFileNameValid(loadName)) break;
-                    Console.WriteLine("Wrong input. File name must be 1-10 characters long, containing only letters and digits.\n");
-                }
-                string loadPath = loadName + ".txt";
-                LoadFromFile(loadPath);
-                break;
-            case 0:
-                Console.WriteLine("Thanks! Have a nice day!");
-                running = false;
-                break;
-            default:
-                Console.WriteLine("Unknown option. Try again. \n");
-                break;
-        } 
+                    double currSub = CalculateSub(itemPrices, currCount);
+                    string tipMenu = $"Net Total: ${currSub:F2}\n" +
+                             "1 - Tip Percentage\n" +
+                             "2 - Tip Amount\n" +
+                             "0 - No Tip\n" +
+                             "Enter Tip Method: ";
+                    tipAmount = AddTip(tipMenu, currSub);
+                    string tipStatus = (tipAmount > 0) ? $"\nTip successfully updated to ${tipAmount:F2}\n" : "\nTip amount is $0.00\n";
+                    Console.WriteLine(tipStatus);
+                    break;
+                case 4:
+                    string billText = DisplayBill(itemNames, itemPrices, currCount, tipAmount, gstPercent);
+                    Console.WriteLine(billText);
+                    Console.WriteLine("Press any key to continue...");
+                    Console.ReadKey();
+                    break;
+                case 5:
+                    if (IsBillEmpty(currCount, "Bill is already empty. There is nothing to clear..")) break;
+                    else
+                    {
+                        ClearBill(itemNames, itemPrices, ref currCount, ref tipAmount);
+                        Console.WriteLine("\nBill was successfully cleared!\n");
+                    }
+                    break;
+                case 6:
+                    if (IsBillEmpty(currCount, "Bill is empty. Nothing to save.")) break;
+                    string saveName = "";
+                    while (true)
+                    {
+                        saveName = Message("Enter file name to save (1-10 letters/digits, without .txt): ");
+                        if (string.IsNullOrWhiteSpace(saveName)) saveName = "bill";
+                        if (IsFileNameValid(saveName)) break;
+                        Console.WriteLine("Wrong input. File name must be 1-10 characters long, containing only letters and digits.\n");
+                    }
+                    string savePath = saveName + ".txt";
+                    string content = DisplayBill(itemNames, itemPrices, currCount, tipAmount, gstPercent);
+
+                    Console.WriteLine(SaveToFile(savePath, content) ? "\nSaved!" : "\n[!]Error saving file.");
+                    if (SaveToFile(savePath, content))
+                        Console.WriteLine($"\nSuccessfully saved to {savePath}!\n");
+                    else
+                        Console.WriteLine("\n[!] Error saving file.\n");
+                    break;
+                case 7:
+                    string loadName = "";
+                    while (true)
+                    {
+                        loadName = Message("Enter file name to load(1 - 10 letters / digits, without.txt): ");
+                        if (string.IsNullOrWhiteSpace(loadName)) loadName = "bill";
+                        if (IsFileNameValid(loadName)) break;
+                        Console.WriteLine("Wrong input. File name must be 1-10 characters long, containing only letters and digits.\n");
+                    }
+                    string loadPath = loadName + ".txt";
+                    LoadFromFile(loadPath);
+                    break;
+                case 0:
+                    Console.WriteLine("Thanks! Have a nice day!");
+                    running = false;
+                    break;
+                default:
+                    Console.WriteLine("Unknown option. Try again. \n");
+                    break;
+            }
+        }
+        else
+            Console.WriteLine("\nInvalid selection. Please enter a valid menu number.\n");
     }
-    else
-        Console.WriteLine("\nInvalid selection. Please enter a valid menu number.\n");
 }
 
 bool IsBillEmpty(int count, string errMessage)
